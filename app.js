@@ -82,8 +82,7 @@ app.post("/api/login", async (req, res) => {
                 return res.render("login")
             }
         });
-    } catch (error) {
-        // Handle any unexpected errors
+    } catch (error) {        
         console.error(error);
         return res.status(500).json({ error: "Internal Server Error" });
     }
