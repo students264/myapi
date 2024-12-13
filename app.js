@@ -39,7 +39,7 @@ app.get("/api/users/data",Authentication,async(req,res)=>{
     const result=await data.find({})
     return res.json({result})
 })
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', async (req, res) =>{
     const { name,email, password } = req.body;
     const existingUser = await User.findOne({ email: email });
     if (existingUser) {
@@ -60,25 +60,35 @@ app.post('/api/register', async (req, res) => {
     res.redirect("/api/user")
 })
 })
-app.post("/api/login",async(req,res)=>{
-    const {email, password } = req.body;
-    const result=await User.findOne({email:email})
-    if(result){
-        bcrypt.compare(password,result.password,(err,match)=>{
-            if(match){
-                const secret=uuid()
-                res.cookie("user",secret,{ maxAge: 60 * 60 * 1000, httpOnly: true })
+app.post("/api/login", async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.email });
+        
+        if (!user) {
+            return res.render("login")
+        }
+        bcrypt.compare(req.body.password, user.password, (err, match) => {
+            if (err) {
+                return res.status(500).json({ error: "Error checking password" });
+            }
+            if (match) {
+                const secret = uuid();
+                res.cookie("user", secret, {
+                    maxAge: 60 * 60 * 1000,
+                    httpOnly: true,
+                });
                 return res.redirect("/api/user")
+            } else {
+                return res.render("login")
             }
-            else{
-                return res.render("Found")
-            }
-        })
+        });
+    } catch (error) {
+        // Handle any unexpected errors
+        console.error(error);
+        return res.status(500).json({ error: "Internal Server Error" });
     }
-    else{
-        return res.render("login")
-    }
-}) 
+});
+
 app.listen(port,(err)=>{
     if(err){
         console.log("error",err)
