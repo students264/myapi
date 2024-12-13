@@ -40,20 +40,19 @@ app.get("/api/users/data",Authentication,async(req,res)=>{
     return res.json({result})
 })
 app.post('/api/register', async (req, res) =>{
-    const { name,email, password } = req.body;
-    const existingUser = await User.findOne({ email: email });
+    const existingUser = await User.findOne({ email:req.body.email });
     if (existingUser) {
       return res.status(400).send("Email already in use.");
     }
     const saltRounds = 10; 
-  bcrypt.hash(password, saltRounds, async (err, hashedPassword) => {
+  bcrypt.hash(req.body.password, saltRounds, async (err, hashedPassword) => {
     if (err) {
       console.error('Error hashing password:', err);
       return res.status(500).send('Error registering user.');
     }
-    const newUser = new User({
-      name:name,
-      email: email,
+    const newUser = await User.create({
+      name:req.body.name,
+      email:req.body.email,
       password: hashedPassword,
     });
     console.log(newUser)
@@ -72,7 +71,7 @@ app.post("/api/login", async (req, res) => {
                 return res.status(500).json({ error: "Error checking password" });
             }
             if (match) {
-                const secret = uuid();
+                const secret = uuidv4()
                 res.cookie("user", secret, {
                     maxAge: 60 * 60 * 1000,
                     httpOnly: true,
